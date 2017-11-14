@@ -2,7 +2,7 @@
 
 export USE_CCACHE=1  USE_NINJA=true 
 export KERNEL_TOOLCHAIN_PREFIX=arm-eabi- 
-export KERNEL_TOOLCHAIN=/home/shared/toolchains/arm-eabi-5.3-cortex-a8/bin 
+export KERNEL_TOOLCHAIN=/home/shared/toolchains/gcc-linaro-5.4.1-2017.05-x86_64_arm-eabi/bin/ 
 
 
 # Support fast builds of kernel without calling kati then ninja
