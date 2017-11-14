@@ -52,7 +52,6 @@ kernel_image() {
 kernel_modules() {
 	echo "Building Kenrel modules."
 	make "$MAKE_FLAGS" -C "$KERNEL_SRC" O="$KERNEL_OUT" ARCH="$KERNEL_ARCH" CROSS_COMPILE="$KERNEL_CROSS_COMPILE" modules
-
 }
 
 # Copy to tmpdir
@@ -72,6 +71,16 @@ kernel_copy_modules() {
       -exec cp '{}' "$TMPDIR/modules/" ';'
 }
 
+# out of tree modules building
+kernel_modules_extra() {
+	MODDIR="$BUILD_TOP/$1"
+	if [[ ! -z "$2" ]]; then
+		BUILD_TARGET="$2"
+	else
+		BUILD_TARGET="modules"
+	fi;
+	make "$MAKE_FLAGS" -C "$KERNEL_SRC"  O="$KERNEL_OUT" M="$MODDIR" ARCH="$KERNEL_ARCH" CROSS_COMPILE="$KERNEL_CROSS_COMPILE" "$BUILD_TARGET"
+}
 
 case "$1" in 
 	menuconfig)
@@ -81,6 +90,9 @@ case "$1" in
 	modules)
 		kernel_modules
 		kernel_copy_modules
+	;;
+	M)
+		kernel_modules_extra "${@:2}"
 	;;
 	*)
 		setup_tmpdir
