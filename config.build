@@ -1,0 +1,13 @@
+# Local configurations sourced by shell script
+
+export USE_CCACHE=1  USE_NINJA=true 
+export KERNEL_TOOLCHAIN_PREFIX=arm-eabi- 
+export KERNEL_TOOLCHAIN=/home/shared/toolchains/arm-eabi-5.3-cortex-a8/bin 
+
+
+# Support fast builds of kernel without calling kati then ninja
+export FAST_KBUILD_SRC=kernel/samsung/aries
+export FAST_KBUILD_IMAGE=zImage
+export FAST_KBUILD_CONFIG=lineage-14_galaxysmtd_defconfig
+export FAST_KBUILD_DEVICE=galaxysmtd
+export FAST_KBUILD_ARCH=arm
