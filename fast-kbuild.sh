@@ -21,7 +21,7 @@ KERNEL_OUT="$TMPDIR/KERNEL_OUT/"
 KERNEL_CROSS_COMPILE="$CCACHE_BIN $KERNEL_TOOLCHAIN/$KERNEL_TOOLCHAIN_PREFIX"
 KERNEL_BUILT="$KERNEL_OUT/arch/arm/boot/$KERNEL_IMAGE"
 KERNEL_CONFIG="$KERNEL_OUT/.config"
-MAKE_FLAGS="CFLAGS_MODULE=-fno-pic"
+MAKE_FLAGS="-j$FAST_KBUILD_JOBS CFLAGS_MODULE=-fno-pic"
 
 export CCACHE_DIR="$TMPDIR/ccache"
 
@@ -34,32 +34,26 @@ setup_tmpdir(){
 
 kernel_config() {
 	echo "Building Kernel Config"
-	make "$MAKE_FLAGS" -C "$KERNEL_SRC" O="$KERNEL_OUT" ARCH="$KERNEL_ARCH" CROSS_COMPILE="$KERNEL_CROSS_COMPILE" "$FAST_KBUILD_CONFIG"
+	make $MAKE_FLAGS -C "$KERNEL_SRC" O="$KERNEL_OUT" ARCH="$KERNEL_ARCH" CROSS_COMPILE="$KERNEL_CROSS_COMPILE" "$FAST_KBUILD_CONFIG"
 }
 
 kernel_menuconfig(){
-	make "$MAKE_FLAGS" -C "$KERNEL_SRC" O="$KERNEL_OUT" ARCH="$KERNEL_ARCH" CROSS_COMPILE="$KERNEL_CROSS_COMPILE" menuconfig
+	make $MAKE_FLAGS -C "$KERNEL_SRC" O="$KERNEL_OUT" ARCH="$KERNEL_ARCH" CROSS_COMPILE="$KERNEL_CROSS_COMPILE" menuconfig
 }
 
 kernel_image() {
 	echo "Building Kernel"
-	make "$MAKE_FLAGS" -C "$KERNEL_SRC" O="$KERNEL_OUT" ARCH="$KERNEL_ARCH" CROSS_COMPILE="$KERNEL_CROSS_COMPILE" "$KERNEL_IMAGE"
-	if grep -q 'CONFIG_MODULES=y' "$KERNEL_CONFIG"; then
-		kernel_modules
-	fi;
+	make $MAKE_FLAGS -C "$KERNEL_SRC" O="$KERNEL_OUT" ARCH="$KERNEL_ARCH" CROSS_COMPILE="$KERNEL_CROSS_COMPILE" "$KERNEL_IMAGE"
 }
 
 kernel_modules() {
 	echo "Building Kenrel modules."
-	make "$MAKE_FLAGS" -C "$KERNEL_SRC" O="$KERNEL_OUT" ARCH="$KERNEL_ARCH" CROSS_COMPILE="$KERNEL_CROSS_COMPILE" modules
+	make $MAKE_FLAGS -C "$KERNEL_SRC" O="$KERNEL_OUT" ARCH="$KERNEL_ARCH" CROSS_COMPILE="$KERNEL_CROSS_COMPILE" modules
 }
 
 # Copy to tmpdir
 kernel_copy() {
 	cp "$KERNEL_BUILT" "$TMPDIR"
-	if grep -q 'CONFIG_MODULES=y' "$KERNEL_CONFIG"; then
-		kernel_copy_modules
-	fi;
 }
 
 kernel_copy_modules() {
@@ -79,13 +73,19 @@ kernel_modules_extra() {
 	else
 		BUILD_TARGET="modules"
 	fi;
-	make "$MAKE_FLAGS" -C "$KERNEL_SRC"  O="$KERNEL_OUT" M="$MODDIR" ARCH="$KERNEL_ARCH" CROSS_COMPILE="$KERNEL_CROSS_COMPILE" "$BUILD_TARGET"
+	make $MAKE_FLAGS -C "$KERNEL_SRC"  O="$KERNEL_OUT" M="$MODDIR" ARCH="$KERNEL_ARCH" CROSS_COMPILE="$KERNEL_CROSS_COMPILE" "$BUILD_TARGET"
 }
 
 case "$1" in 
 	menuconfig)
 		kernel_config
 		kernel_menuconfig
+	;;
+	kernel)
+		setup_tmpdir
+		kernel_config
+		kernel_image
+		kernel_copy
 	;;
 	modules)
 		kernel_modules
@@ -99,5 +99,9 @@ case "$1" in
 		kernel_config
 		kernel_image
 		kernel_copy
+		if grep -q 'CONFIG_MODULES=y' "$KERNEL_CONFIG"; then
+		 	kernel_copy_modules
+		 	kernel_modules
+		fi;
 	;;
 esac
