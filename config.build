@@ -11,3 +11,4 @@ export FAST_KBUILD_IMAGE=zImage
 export FAST_KBUILD_CONFIG=lineage-14_galaxysmtd_defconfig
 export FAST_KBUILD_DEVICE=galaxysmtd
 export FAST_KBUILD_ARCH=arm
+export FAST_KBUILD_JOBS=6
